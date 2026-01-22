@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS base
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm AS base
 
 # copy lock + project metadata and install pinned deps
 COPY uv.lock uv.lock
@@ -11,7 +11,7 @@ RUN uv sync --frozen
 
 # Instead of uv sync during build, use the following to speed up
 # iterative development with caching (not installing everything again)
-#ENV UV_LINK_MODE=copy
-#RUN --mount=type=cache,target=/root/.cache/uv uv sync
+ENV UV_LINK_MODE=copy
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
 ENTRYPOINT ["uv", "run", "src/xray_image_classifier/train.py"]
