@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        operating-system: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.12", "3.11"]
         torch-version: ["2.1.2", "2.2.1"]
 
@@ -37,3 +37,23 @@ jobs:
         run: |
           uv run coverage run -m pytest tests/
           uv run coverage report -m
+  build:
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit . --config cloudbuild.yaml

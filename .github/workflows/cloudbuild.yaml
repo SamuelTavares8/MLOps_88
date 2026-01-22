@@ -5,7 +5,7 @@ steps:
     'build',
     '.',
     '-t',
-    'europe-west3-docker.pkg.dev/mlops-481916/my-container-registry/train',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/train',
     '-f',
     'dockerfiles/train.dockerfile'
   ]
@@ -14,7 +14,7 @@ steps:
   id: 'Push train image'
   args: [
     'push',
-    'europe-west3-docker.pkg.dev/mlops-481916/my-container-registry/train'
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/train'
   ]
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -23,7 +23,7 @@ steps:
     'build',
     '.',
     '-t',
-    'europe-west3-docker.pkg.dev/mlops-481916/my-container-registry/evaluate',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/evaluate',
     '-f',
     'dockerfiles/evaluate.dockerfile'
   ]
@@ -32,7 +32,7 @@ steps:
   id: 'Push evaluate image'
   args: [
     'push',
-    'europe-west3-docker.pkg.dev/mlops-481916/my-container-registry/evaluate'
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/evaluate'
   ]
 
 options:
