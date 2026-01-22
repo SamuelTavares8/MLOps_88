@@ -11,7 +11,4 @@ workerPoolSpecs:
       - --batch-size=128
     env:
       - name: WANDB_API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: WANDB_API_KEY
-            key: latest
+        secretRef: WANDB_API_KEY
