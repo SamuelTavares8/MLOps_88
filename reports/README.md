@@ -148,7 +148,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 3 fill here ---
+Yes. For the project, besides the tools covered in the course, we used the MONAI (Medical Open Network for AI) open-source framework to support our chest X-ray image classification task. MONAI is built on top of PyTorch and is specifically designed for medical imaging workflows. By importing models such as DenseNet and EfficientNet, we achieved very good classification accuracy and were able to focus more on the operations around our machine learning project rather than on implementing a model from scratch.
 
 ## Coding environment
 
@@ -168,7 +168,13 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 4 fill here ---
+We managed project dependencies using uv, which provides a good Python dependency management based on a lockfile. All required packages and their exact versions are defined in pyproject.toml automatically. Whenever dependencies were added or updated, the lockfile was regenerated, guaranteeing consistent environments for all team members.
+
+So, to work in our project, a new team member would clone our Git repository, install uv, and run uv sync, which creates a virtual environment and installs all dependencies exactly as specified in the lockfile. This process avoids version mismatches and “works on my machine” issues.
+
+For deployment and CI we also provided Docker images that encapsulate the runtime environment ensuring consistency between local development, testing, and execution. Git was used to version control both code and configuration files, enabling transparent collaboration and traceability of dependency changes throughout the project.
+
+In addition, we used pre-commit hooks to enforce code quality locally before changes are committed. These hooks automatically run checks such as formatting and linting, helping catch issues early and keep the codebase consistent across the team. We also set up GitHub Actions to run automated tests and checks on every push and pull request, enabling the continuous integration of our project.
 
 ### Question 5
 
@@ -184,7 +190,11 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 5 fill here ---
+We initialized the project using the cookiecutter template provided in the course, which gave us a clean and well-structured starting point. We followed the template closely, adapting it to fit the needs of our medical imaging classification task.
+
+The project root contains configuration and metadata files such as pyproject.toml, CI configuration, and Dockerfiles. The data folder is managed with DVC and stores both raw and processed datasets as .dvc files. These are further organized into raw and processed directories, each split into train, val, and test subsets, with subfolders corresponding to each classification target. This structure ensures clear data versioning and reproducibility. The src folder contains the main source code, including dataset handling, model implementation, training (with and without hydra), and evaluation logic for the X-ray classification models. (VISUALIZE?)
+
+The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). We also included a config folder to manage experiment and training configurations. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage.
 
 ### Question 6
 
@@ -199,7 +209,10 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 6 fill here ---
+Yes. We followed the PEP 8 formatting standard using ruff, which helped us keep a consistent code style across the entire project and automatically detect common issues such as unused imports or stylistic mistakes. For code typing, we used mypy to statically check function input and output types, allowing us to catch type-related errors early in development.
+
+These concepts are especially important in group projects, where multiple people contribute to the same codebase. Consistent formatting improves readability and makes the code easier for others to understand and review. Typing adds an extra layer of clarity by making assumptions explicit, reducing misunderstandings between developers and preventing subtle bugs. Overall, these concepts improve code consistency, reliability and maintainability.
+
 
 ## Version control
 
@@ -218,7 +231,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 7 fill here ---
+4 tests for data; 7 for the model; 3 for the training [A DESENVOLVER]
 
 ### Question 8
 
@@ -233,7 +246,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 8 fill here ---
+My code coverage is [VALOR]. Even having 100% of code coverage, it does not mean that our code is error free. We can test several times the same code lines targeting different possible errors, as unexpected inputs, logic or even good training in the case of machine learning models. The only thing we could say is that is more probable to have a error free code with 100% coverage than with a lower percentage.
 
 ### Question 9
 
@@ -248,7 +261,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 9 fill here ---
+We used two different branches. In one of them we develop the model, trained, used hydra, Weights&Biases. On the other branch we created the unit test, setup the version control [POR CONTINUAR]
 
 ### Question 10
 
@@ -263,7 +276,9 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 10 fill here ---
+Yes, initially Google Drive, !!!then GCP bucket!!!. We used DVC due to the fact that we had a big dataset (x ray images) to use to it would be very heavy for the git hub to version control it. So initially we connect the DVC with the Google Drive of one of the team members (DVC will track the data images and git only the dvc files associatedthat are much more lighter)
+
+Although we set up data version control, our dataset was never modified. In general, DVC is beneficial in managing data in a project when multiple team members are working on the same data set. With data version control, team members can collaborate on the dataset and make changes without interfering with each other's work. It also allows for easy tracking of changes and rollbacks if necessary. Additionally, data version control makes it easy to reproduce results and maintain a clear history of changes to the data set, which is essential for transparency and reproducibility in research projects. Overall, data version control ensures efficient collaboration and accountability in data management.
 
 ### Question 11
 
