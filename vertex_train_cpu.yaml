@@ -3,7 +3,7 @@ workerPoolSpecs:
     machineType: n1-highmem-2
   replicaCount: 1
   containerSpec:
-    imageUri: europe-west1-docker.pkg.dev/mlops-483916/my-container-registry/train:latest
+    imageUri: europe-west3-docker.pkg.dev/mlops-483916/my-container-registry/train:latest
     env:
     - name: WANDB_API_KEY
       value: $WANDB_API_KEY
