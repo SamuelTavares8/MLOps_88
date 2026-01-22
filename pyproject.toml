@@ -21,6 +21,8 @@ dependencies = [
     "dvc[gdrive]>=3.66.1",
     "fastapi==0.115.6",
     "httpx>=0.28.1",
+    "mypy>=1.19.1",
+    "ruff>=0.1.3",
     "hydra-core>=1.3.2",
     "matplotlib>=3.10.8",
     "monai>=1.5.1",
@@ -31,6 +33,8 @@ dependencies = [
     "typer==0.15.1",
     "uvicorn==0.34.0",
     "wandb>=0.23.1",
+    "git-filter-repo>=2.47.0",
+    "dvc-gs>=3.0.2",
 ]
 
 [dependency-groups]
@@ -64,3 +68,8 @@ line-length = 120
 
 [tool.coverage.run]
 omit = ["tests/*"]
+source = ["xray_image_classifier"]
+
+
+[tool.coverage.report]
+show_missing = true

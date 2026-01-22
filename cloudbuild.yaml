@@ -1,0 +1,39 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build train image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/train',
+    '-f',
+    'dockerfiles/train.dockerfile'
+  ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push train image'
+  args: [
+    'push',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/train'
+  ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build evaluate image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/evaluate',
+    '-f',
+    'dockerfiles/evaluate.dockerfile'
+  ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push evaluate image'
+  args: [
+    'push',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/evaluate'
+  ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
