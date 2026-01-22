@@ -4,9 +4,6 @@ workerPoolSpecs:
   replicaCount: 1
   containerSpec:
     imageUri: europe-west3-docker.pkg.dev/mlops-483916/my-container-registry/evaluate:latest
-    command:
-      - python
-      - src/xray_image_classifier/train.py
     args:
       - --epochs=20
       - --batch-size=128
