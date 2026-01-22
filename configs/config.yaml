@@ -1,0 +1,11 @@
+defaults:
+  - model: densenet121
+  - training: bs16
+  - optimizer: adam_base
+  - experiment: null
+  - _self_
+
+project_name: xray-classification
+num_classes: 4
+device: auto
+seed: 42
