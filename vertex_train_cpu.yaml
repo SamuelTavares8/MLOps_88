@@ -5,7 +5,9 @@ workerPoolSpecs:
   containerSpec:
     imageUri: europe-west3-docker.pkg.dev/mlops-483916/my-container-registry/train:latest
     args:
-      - --epochs=20
+      - --data-dir=/gcs/mlops_data_bucket_88/data/processed/train
+      - --epochs-phase1=10
+      - --epochs-phase2=10
       - --batch-size=128
     env:
       - name: WANDB_API_KEY
