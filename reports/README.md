@@ -198,7 +198,7 @@ The src folder contains the main source code, including dataset handling, model 
 
 The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). It also has API and load tests.
 
- We also included a config folder to manage experiment and training configurations and a output one to record the hydra experiments of different model hyperparameters. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage. We also removed the file visualize.py in the source, since we did not use it in our project.
+ We also included a config folder to manage experiment and training configurations and a output one to record the hydra experiments of different model hyperparameters. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage. We also removed the file visualize.py in the source, since we did not use it in our project. Moreover, we also create a wandb folder which records the models testes.
 
 ### Question 6
 
@@ -287,7 +287,7 @@ Using branches improved collaboration by reducing the risk of overwriting each o
 >
 > Answer:
 
-Yes, initially Google Drive, !!!then GCP bucket!!!. We used DVC due to the fact that we had a big dataset (x ray images) to use to it would be very heavy for the git hub to version control it. So initially we connect the DVC with the Google Drive of one of the team members (DVC will track the data images and git only the dvc files associatedthat are much more lighter)
+We used DVC due to the fact that we had a big dataset (x ray images) to use to it would be very heavy for the git hub to version control it. So initially we connect the DVC with the Google Drive of one of the team members (DVC will track the data images and git only the dvc files associatedthat are much more lighter)
 
 Although we set up data version control, our dataset was never modified. In general, DVC is beneficial in managing data in a project when multiple team members are working on the same data set. With data version control, team members can collaborate on the dataset and make changes without interfering with each other's work. It also allows for easy tracking of changes and rollbacks if necessary. Additionally, data version control makes it easy to reproduce results and maintain a clear history of changes to the data set, which is essential for transparency and reproducibility in research projects. Overall, data version control ensures efficient collaboration and accountability in data management.
 
@@ -350,7 +350,6 @@ uv run invoke train-hydra.py experiment=exp_1
 Different experiment files correspond to different hyperparameter configurations. This setup allows us to easily switch between experiments, track configurations and systematically compare results without modifying the source code.
 
 
---- question 12 fill here ---
 
 ### Question 13
 
@@ -367,9 +366,9 @@ Different experiment files correspond to different hyperparameter configurations
 
 Reproducibility was ensured mainly through the use of configuration files and experiment tracking. All experiment parameters are defined in Hydra YAML configuration files, meaning that every experiment is fully described by a specific configuration. When an experiment is executed with train_hydra.py, Hydra automatically stores the exact configuration used and the outputs in the output folder, ensuring that no information about the experiment setup is lost.
 
-Additionally, dependency reproducibility is guaranteed through uv and the uv.lock file, which fixes exact package versions across all environments. This ensures that experiments can be rerun under identical software conditions. Data reproducibility is ensured using DVC, where datasets are versioned and linked to specific commits, making it possible to retrieve the exact data version used during training.
+Additionally, dependency reproducibility is guaranteed through uv and the uv.lock file, which fixes exact package versions across all environments. This ensures that experiments can be rerun under identical software conditions. Data reproducibility is ensured using DVC, where datasets are versioned and linked to specific commits, making it possible to retrieve the exact data version used during training, even though that was not used in this project it constitutes a big advantage of using DVC.
 
-We also logged each run using Weights & Biases, which stores hyperparameters, training metrics, and artifacts corresponding to the trained model checkpoints. Thus, to reproduce an experiment, we only need the corresponding configuration file, the DVC data version, and the recorded commit hash, making the full pipeline reproducible.
+We also logged each run using Weights & Biases, which stores hyperparameters, training metrics, and artifacts corresponding to the trained model checkpoints. Thus, to reproduce an experiment, we only need the corresponding configuration file and the recorded commit hash, making the full pipeline reproducible.
 
 
 
@@ -387,8 +386,8 @@ We also logged each run using Weights & Biases, which stores hyperparameters, tr
 > *As seen in the second image we are also tracking ... and ...*
 >
 > Answer:
-![alt text](image-1.png)
-![alt text](image-2.png)
+![my_image](figures/wandb_model.png)
+![my_image](figures/wandb_train.png)
 The uploaded screenshots show the experiments logged using Weights & Biases (W&B) during the training of our model. These 2 images show the results for the final model being deployed in the cloud.
 In the first image, we show the configuration of the model, including key hyperparameters such as the selected backbone (DenseNet121), batch size, number of classes, device, and the number of epochs for each training phase. Logging this information ensures that each experiment is fully traceable and that the exact training setup can be recovered later.
 
@@ -397,8 +396,6 @@ The second image presents the training metrics tracked during the epochs. We log
 These  metrics allow us to compare different experiments, understand the impact of hyperparameter choices and select the best performing model for deployment.
 
 
-
---- question 14 fill here ---
 
 ### Question 15
 
@@ -443,7 +440,6 @@ Debugging was mainly done by running the code locally and carefully inspecting e
 We performed profiling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profiling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
 
 
---- question 16 fill here ---
 
 ## Working in the cloud
 
@@ -479,7 +475,7 @@ Additionally, we used Cloud Build Triggers to automate builds based on repositor
 >
 > Answer:
 
-As explained in the previous question we did not use the Compute Engine but the Vertex AI instead
+As explained in the previous question we did not use the Compute Engine but the Vertex AI instead.
 
 ### Question 19
 
@@ -545,9 +541,9 @@ Overall, we chose Vertex AI because it provides a fully managed environment for 
 > Answer:
 
 
-We implemented a model inference API using FastAPI. The API loads two PyTorch models (DenseNet121 and EfficientNet-B0) at startup, initializes them with the same architecture used during training, loads their fine-tuned weights and sets them to evaluation mode to avoid repeated loading overhead.
+We implemented a model inference API using FastAPI. The API loads two PyTorch models (DenseNet121 and EfficientNet-B0) in the beggining, initializes them with the same architecture used during training, loads their fine-tuned weights and sets them to evaluation mode to avoid repeated loading overhead.
 
-The POST /predict endpoint accepts an image, preferably from the test set, and a query parameter to select the model. Images are decoded using PIL, converted to RGB, and preprocessed with the same resizing and normalization used during training. Inference is executed under torch.no_grad(), and the API returns the predicted class, confidence score, and full probability distribution.
+The POST /predict endpoint accepts an image, preferably from the test set, and a query parameter to select the model. Images are preprocessed with the same resizing and normalization used during training. Inference is executed under torch.no_grad(), and the API returns the predicted class, confidence score, and full probability distribution.
 
 Moreover, the API also exposes Prometheus metrics, including request counts, inference latency and input size statistics, through a /metrics endpoint, and provides a /health endpoint for service monitoring. This design makes our API suitable for cloud deployment.
 
@@ -671,7 +667,6 @@ This frontend was used to validate the complete pipeline, from user interaction 
 >
 > Answer:
 
---- question 29 fill here ---
 
 ### Question 30
 
