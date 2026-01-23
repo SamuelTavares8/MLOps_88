@@ -306,7 +306,16 @@ Although we set up data version control, our dataset was never modified. In gene
 >
 > Answer:
 
---- question 11 fill here ---
+Our continuous integration (CI) setup was implemented using GitHub Actions to automate code quality checks, testing, and environment validation. The pipeline ensures that every push or pull request maintains a stable, consistent, and reproducible codebase.
+
+We configured linting with ruff, following PEP8 conventions to enforce a clean and readable coding style, and type checking with mypy to validate function signatures and data structures. For unit testing, we used pytest to ensure that all the custom modules like data, model, and training, work as intended. These workflows are executed automatically on every push or pull request.
+
+The CI is tested across multiple operating systems (ubuntu-latest and macos-latest) and Python versions (3.11 and 3.12) to guarantee platform compatibility. To speed up the workflows, we enabled caching for Python dependencies and pre-commit hooks, reducing build times significantly.
+
+In addition, we created a pre-commit auto-update workflow, which periodically updates all pre-commit hooks (such as ruff, black, and mypy). This workflow runs daily via a cron job and automatically opens a pull request with the updated versions.
+We also attempted to configure an additional workflow to trigger when data tracked with DVC changed. However, this required Google authentication via GitHub Actions, which caused issues with DVC remote authentication and was not working.
+
+An example of one of our workflows can be found here: https://github.com/SamuelTavares8/MLOps_88/tree/main/.github/workflows
 
 ## Running code and tracking experiments
 
@@ -391,7 +400,7 @@ These  metrics allow us to compare different experiments, understand the impact 
 
 --- question 14 fill here ---
 
-### Question 15 -- SAMU
+### Question 15
 
 > **Docker is an important tool for creating containerized applications. Explain how you used docker in your**
 > **experiments/project? Include how you would run your docker images and include a link to one of your docker files.**
@@ -404,7 +413,17 @@ These  metrics allow us to compare different experiments, understand the impact 
 >
 > Answer:
 
---- question 15 fill here ---
+Docker was used in our project to ensure reproducibility and portability across different environments. By containerizing our applications, we guaranteed that training, inference, and deployment could be executed with the same dependencies and runtime configuration, independent of the underlying system.
+
+We created separate Docker images for model training, evaluate and for serving the inference API. The training image packages the full training pipeline, including the source code, dependencies managed with uv, and the training entry point. The inference image contains the FastAPI application together with the trained model weights and required preprocessing logic. Some Docker images were built locally using and other
+in the cloud using Google Cloud Build through configured build triggers. The resulting images were stored in Google Artifact Registry and were run in the cloud using (for example) the following command:
+
+*gcloud ai custom-jobs create \
+  --region=europe-west3 \
+  --display-name=train-run-005 \
+  --config=vertex_train_cpu.yaml*
+
+A link to a dockerfile (training) is: https://github.com/SamuelTavares8/MLOps_88/blob/main/dockerfiles/train.dockerfile
 
 ### Question 16
 
@@ -692,10 +711,12 @@ Because a lot of time was spent solving these issues, we did not manage to fully
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
-Initially we were 3 members but one of the group members could not give any time for this project so it remained all the work just for two people:
+Initially, our group consisted of three members, but one of them was unable to contribute to the project, leaving the work to be completed by the remaining two members.
 
-- s251921: create the repository and cookiecutter template, downloaded and processed the data, responsible for the building and configuring the dockerfiles, write the unit tests related with the data, model and training, continuous integrat
+- s251921: Created the repository using the Cookiecutter template, downloaded and processed the data, built and configured the Dockerfiles, wrote unit tests for data, model, and training modules, implemented continuous integration, and set up and managed the entire workflow on Google Cloud. Also worked on the report.
 
-- s251920: developed the model and the training and evaluation pipelines, added hydra, weights and biases and profiling to the code, responsible for creating the API and its' metrics, tests and frontend. 
+- s251920: Developed the model and the training and evaluation pipelines, added hydra, weights and biases and profiling to the code, responsible for creating the API and its' metrics, tests and frontend. Contributed to the report. 
 
 During this project we used ChatGPT to help debug our code and improve the formulation of some sentences.
+
+
