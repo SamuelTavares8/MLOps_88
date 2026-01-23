@@ -1,8 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, Query, HTTPException
+from fastapi import FastAPI, UploadFile, File, Query, HTTPException, Response
 from PIL import Image
 import io
 import torch
 from torchvision import transforms
+from prometheus_client import Counter, Histogram, Summary, generate_latest, CONTENT_TYPE_LATEST
+import time
+
 
 # =========================
 # IMPORT MODEL
@@ -14,7 +17,6 @@ from xray_image_classifier.model import XRayClassifier
 # CONFIG
 # =========================
 NUM_CLASSES = 4
-IN_CHANNELS = 3
 IMAGE_SIZE = 224
 
 CLASS_NAMES = [
@@ -65,6 +67,26 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
 ])
 
+# -----------------------------
+# Prometheus metrics
+# -----------------------------
+
+REQUEST_COUNT = Counter(
+    "xray_api_requests_total",
+    "Total number of inference requests received",
+)
+
+INFERENCE_LATENCY = Histogram(
+    "xray_inference_latency_seconds",
+    "Time spent running model inference",
+    buckets=(0.1, 0.25, 0.5, 1, 2, 5, 10),
+)
+
+INPUT_SIZE_BYTES = Summary(
+    "xray_input_size_bytes",
+    "Size of uploaded X-ray images in bytes",
+)
+
 # =========================
 # FASTAPI APP
 # =========================
@@ -92,19 +114,51 @@ async def predict(
             detail=f"Unknown model '{model_name}'",
         )
 
-    selected_model = MODELS[model_name]
-    # Read image
-    image_bytes = await file.read()
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    # -----------------------------
+    # Metrics: request count
+    # -----------------------------
+    REQUEST_COUNT.inc()
 
+    # -----------------------------
+    # Read file ONCE
+    # -----------------------------
+    image_bytes = await file.read()
+
+    # Metrics: input size
+    INPUT_SIZE_BYTES.observe(len(image_bytes))
+
+    # -----------------------------
+    # Decode image
+    # -----------------------------
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image file",
+        )
+
+    # -----------------------------
     # Preprocess
+    # -----------------------------
     x = transform(image).unsqueeze(0).to(DEVICE)
 
-    # Inference
+    selected_model = MODELS[model_name]
+
+    # -----------------------------
+    # Inference + latency metric
+    # -----------------------------
+    start_time = time.time()
+
     with torch.no_grad():
         logits = selected_model(x)
         probs = torch.softmax(logits, dim=1)
 
+    INFERENCE_LATENCY.observe(time.time() - start_time)
+
+    # -----------------------------
+    # Post-processing
+    # -----------------------------
     conf, idx = torch.max(probs, dim=1)
 
     return {
@@ -115,3 +169,10 @@ async def predict(
             for i in range(NUM_CLASSES)
         },
     }
+
+@app.get("/metrics")
+def metrics():
+    return Response(
+        generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
