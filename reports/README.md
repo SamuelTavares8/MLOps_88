@@ -192,13 +192,13 @@ In addition, we used pre-commit hooks to enforce code quality locally before cha
 
 We initialized the project using the cookiecutter template provided in the course, which gave us a clean and well-structured starting point. We overall followed the template, adapting it to fit the needs of our medical imaging classification task.
 
-The project root contains configuration and metadata files such as pyproject.toml, CI configuration, and Dockerfiles. The data folder is managed with DVC and stores both raw and processed datasets as .dvc files. These are further organized into raw and processed directories, each split into train, val, and test subsets, with subfolders corresponding to each classification target. This structure ensures clear data versioning and reproducibility. 
+The project root contains configuration and metadata files such as pyproject.toml, CI configuration, and Dockerfiles. The data folder is managed with DVC and stores both raw and processed datasets as .dvc files. These are further organized into raw and processed directories, each split into train, val, and test subsets, with subfolders corresponding to each classification target. This structure ensures clear data versioning and reproducibility.
 
-The src folder contains the main source code, including dataset handling, model implementation, training and evaluation. We added an additional training file to run hydra experiments. Thus, our project has an usual training file, where profiling can be done optionally, and a train_hydra file that is prepared to run the 
+The src folder contains the main source code, including dataset handling, model implementation, training and evaluation. We added an additional training file to run hydra experiments. Thus, our project has an usual training file, where profiling can be done optionally, and a train_hydra file that is prepared to run the
 
-The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). It also has API and load tests. 
+The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). It also has API and load tests.
 
- We also included a config folder to manage experiment and training configurations and a output one to record the hydra experiments of different model hyperparameters. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage. We also removed the file visualize.py in the source, since we did not use it in our project. 
+ We also included a config folder to manage experiment and training configurations and a output one to record the hydra experiments of different model hyperparameters. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage. We also removed the file visualize.py in the source, since we did not use it in our project.
 
 ### Question 6
 
@@ -331,8 +331,8 @@ uv run invoke train densenet121 --profile
 
 if we wish to run the DenseNet model with profilling.
 
-To improve flexibility and reproducibility, we later introduced Hydra for experiment configuration. All parameters are defined in structured YAML configuration files inside the configs/ folder. Inside this folder, we defined different models, optimizers (with different learning rates and weight decay) and 
-different training parameters (learning rate, batch size, number of epochs). The experiments result from different configurations of these parameters. 
+To improve flexibility and reproducibility, we later introduced Hydra for experiment configuration. All parameters are defined in structured YAML configuration files inside the configs/ folder. Inside this folder, we defined different models, optimizers (with different learning rates and weight decay) and
+different training parameters (learning rate, batch size, number of epochs). The experiments result from different configurations of these parameters.
 
 Experiments are executed through the script train_hydra.py. We also defined a task to run this file, so we can run it as:
 
@@ -380,7 +380,7 @@ We also logged each run using Weights & Biases, which stores hyperparameters, tr
 > Answer:
 ![alt text](image-1.png)
 ![alt text](image-2.png)
-The uploaded screenshots show the experiments logged using Weights & Biases (W&B) during the training of our model. These 2 images show the results for the final model being deployed in the cloud. 
+The uploaded screenshots show the experiments logged using Weights & Biases (W&B) during the training of our model. These 2 images show the results for the final model being deployed in the cloud.
 In the first image, we show the configuration of the model, including key hyperparameters such as the selected backbone (DenseNet121), batch size, number of classes, device, and the number of epochs for each training phase. Logging this information ensures that each experiment is fully traceable and that the exact training setup can be recovered later.
 
 The second image presents the training metrics tracked during the epochs. We logged the training loss and training accuracy at each epoch. The loss curve shows a consistent decrease throughout training, indicating stable convergence of the model. At the same time, the training accuracy steadily increases and reaches values close to 1.0, showing that the model successfully learns the training data. These metrics are essential to assess whether the learning process behaves as expected.
@@ -391,7 +391,7 @@ These  metrics allow us to compare different experiments, understand the impact 
 
 --- question 14 fill here ---
 
-### Question 15 -- SAMU 
+### Question 15 -- SAMU
 
 > **Docker is an important tool for creating containerized applications. Explain how you used docker in your**
 > **experiments/project? Include how you would run your docker images and include a link to one of your docker files.**
@@ -406,7 +406,7 @@ These  metrics allow us to compare different experiments, understand the impact 
 
 --- question 15 fill here ---
 
-### Question 16 
+### Question 16
 
 > **When running into bugs while trying to run your experiments, how did you perform debugging? Additionally, did you**
 > **try to profile your code or do you think it is already perfect?**
@@ -419,9 +419,9 @@ These  metrics allow us to compare different experiments, understand the impact 
 >
 > Answer:
 
-Debugging was mainly done by running the code locally and carefully inspecting error messages. When errors occurred, we used print statements and logging to check intermediate values, such as model outputs, loss values and configuration parameters.We also focused on specific parts of the code when the errors appeared to make sure we could undertsand the origin of the error. In some cases, we consulted documentation and LLM's to help us. 
+Debugging was mainly done by running the code locally and carefully inspecting error messages. When errors occurred, we used print statements and logging to check intermediate values, such as model outputs, loss values and configuration parameters.We also focused on specific parts of the code when the errors appeared to make sure we could undertsand the origin of the error. In some cases, we consulted documentation and LLM's to help us.
 
-We performed profilling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profilling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient. 
+We performed profilling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profilling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
 
 
 --- question 16 fill here ---
@@ -566,14 +566,7 @@ Users can upload a 224×224 chest X-ray image, which should be converted from gr
 >
 > Answer:
 
-
-Yes, we implemented both tests in our API.
-
-For unit testing, we used FastAPI’s TestClient to validate the behavior of the API. We implemented a health check test to ensure the service is running correctly (GET /health) and inference tests for the prediction endpoint (POST /predict). These tests verify that the API returns a valid response, that the expected fields (prediction, confidence, and probabilities) are present in the output and that confidence values are within a valid range. We also tested explicit model selection by passing a query parameter to ensure that different backbones (DenseNet121 and EfficientNet-B0) are correctly handled by the API.
-
-In addition to unit tests, we implemented load testing using Locust to evaluate the API under concurrent usage. The load test simulates multiple users sending X-ray images to the inference endpoint, with weighted tasks to reflect realistic usage patterns (more frequent requests to DenseNet121 than EfficientNet-B0). Images are loaded once per simulated user to avoid disk I/O overhead during testing. We tested the API for 10 simulataneous users and it did not crash or fail. 
-
-
+[RITA PARTE]
 
 ### Question 26
 
@@ -631,9 +624,7 @@ Overall, despite the learning curve, working in the cloud was a valuable experie
 >
 > Answer:
 
-
 RITA
-
 
 ### Question 29
 
@@ -689,3 +680,7 @@ Because a lot of time was spent solving these issues, we did not manage to fully
 > *All members contributed to code by...*
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
+
+Initially we were 3 members but one of the group members could not give any time for this project so it remained all the work just for two people:
+
+- s251921: create the repository and cookiecutter template, downloaded and processed the data, responsible for the building and configuring the dockerfiles, write the unit tests related with the data, model and training, continuous integrat
