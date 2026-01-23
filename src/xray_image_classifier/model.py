@@ -9,10 +9,7 @@ classification of chest X-ray images, targeting the following classes:
 - Normal
 - Tuberculosis
 
-The models defined here are intentionally decoupled from any training
-or data-loading logic, following good software engineering practices.
 
-Author: Your Name
 """
 
 from __future__ import annotations
@@ -28,19 +25,6 @@ class XRayClassifier(nn.Module):
     This model is designed for 2D chest X-ray images and outputs logits
     for multi-class classification.
 
-    Parameters
-    ----------
-    num_classes : int
-        Number of output classes.
-    in_channels : int, optional
-        Number of input channels. Use 1 for grayscale X-rays,
-        3 if images are RGB.
-    backbone : str, optional
-        Backbone architecture to use. Supported:
-        {"densenet121", "efficientnet-b0"}.
-    pretrained : bool, optional
-        Whether to initialize the backbone with pretrained weights.
-        Default is True.
     """
 
     def __init__(
@@ -73,10 +57,6 @@ class XRayClassifier(nn.Module):
         """
         Instantiate a MONAI backbone network.
 
-        Raises
-        ------
-        ValueError
-            If an unsupported backbone is requested.
         """
         if backbone == "densenet121":
             return DenseNet121(
@@ -100,33 +80,19 @@ class XRayClassifier(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor of shape (B, C, H, W).
-
-        Returns
-        -------
-        torch.Tensor
-            Logits of shape (B, num_classes).
         """
         return self.model(x)
 
     def freeze_backbone(self) -> None:
         """
         Freeze all backbone parameters.
-        Keeps the classification head trainable.
 
-        Safe for:
-        - DenseNet121
-        - EfficientNet-B0
         """
         # Freeze everything
         for param in self.model.parameters():
             param.requires_grad = False
 
-        # Always unfreeze classifier head
+        # Unfreeze classifier head
         if self.backbone_name == "densenet121":
             for name, param in self.model.named_parameters():
                 if name.startswith("class_layers"):

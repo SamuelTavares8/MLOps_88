@@ -291,7 +291,7 @@ Yes, initially Google Drive, !!!then GCP bucket!!!. We used DVC due to the fact 
 
 Although we set up data version control, our dataset was never modified. In general, DVC is beneficial in managing data in a project when multiple team members are working on the same data set. With data version control, team members can collaborate on the dataset and make changes without interfering with each other's work. It also allows for easy tracking of changes and rollbacks if necessary. Additionally, data version control makes it easy to reproduce results and maintain a clear history of changes to the data set, which is essential for transparency and reproducibility in research projects. Overall, data version control ensures efficient collaboration and accountability in data management.
 
-### Question 11
+### Question 11 
 
 > **Discuss you continuous integration setup. What kind of continuous integration are you running (unittesting,**
 > **linting, etc.)? Do you test multiple operating systems, Python  version etc. Do you make use of caching? Feel free**
@@ -325,11 +325,11 @@ Although we set up data version control, our dataset was never modified. In gene
 >
 > Answer:
 
-Initially, experiments were run using a standard training script (train.py) with fixed hyperparameters defined directly in the code. To run this, a task was defined in the task.py file, where the user can choose which model to use (DenseNet or EfficientNet) and whether profilling should be done or not. It can be run as:
+Initially, experiments were run using a standard training script (train.py) with fixed hyperparameters defined directly in the code. To run this, a task was defined in the task.py file, where the user can choose which model to use (DenseNet or EfficientNet) and whether profiling should be done or not. It can be run as:
 
 uv run invoke train densenet121 --profile
 
-if we wish to run the DenseNet model with profilling.
+if we wish to run the DenseNet model with profiling.
 
 To improve flexibility and reproducibility, we later introduced Hydra for experiment configuration. All parameters are defined in structured YAML configuration files inside the configs/ folder. Inside this folder, we defined different models, optimizers (with different learning rates and weight decay) and
 different training parameters (learning rate, batch size, number of epochs). The experiments result from different configurations of these parameters.
@@ -421,7 +421,7 @@ These  metrics allow us to compare different experiments, understand the impact 
 
 Debugging was mainly done by running the code locally and carefully inspecting error messages. When errors occurred, we used print statements and logging to check intermediate values, such as model outputs, loss values and configuration parameters.We also focused on specific parts of the code when the errors appeared to make sure we could undertsand the origin of the error. In some cases, we consulted documentation and LLM's to help us.
 
-We performed profilling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profilling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
+We performed profiling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profiling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
 
 
 --- question 16 fill here ---
@@ -546,9 +546,13 @@ Moreover, the API also exposes Prometheus metrics, including request counts, inf
 > *`curl -X POST -F "file=@file.json"<weburl>`*
 >
 > Answer:
-[RITA LOCALLY]
+The API was first deployed and tested locally by running the FastAPI application with Uvicorn. The API can be started using
 
-The API was deployed in the cloud using Google Cloud Run. The FastAPI application was containerized with Docker and pushed to Google Cloud, where it is served as a fully managed, scalable service. Once deployed, the API can be accessed through the automatically generated FastAPI documentation interface at
+uv run uvicorn xray_image_classifier.api:app --app-dir src
+
+The application starts by loading the fine-tuned DenseNet121 and EfficientNet-B0 models from disk, moves them to the available device and sets them to evaluation mode. Once running, the API is accessible at http://127.0.0.1:8000. By checking the /health endpoint we can verify if the API is running without any problems. 
+
+After this, the API was deployed in the cloud using Google Cloud Run. The FastAPI application was containerized with Docker and pushed to Google Cloud, where it is served as a fully managed, scalable service. Once deployed, the API can be accessed through the automatically generated FastAPI documentation interface at
 https://gcp-test-app-1036878523310.europe-west3.run.app/docs.
 
 Users can upload a 224×224 chest X-ray image, which should be converted from grayscale to RGB. Then it will be processed by the deployed model to return a classification result (Normal, Covid, Turbercolosis, Pneunomia). The service can also be invoked via: *curl -X POST -F "file=@file.json" https://gcp-test-app-1036878523310.europe-west3.run.app/docs*
@@ -566,7 +570,7 @@ Users can upload a 224×224 chest X-ray image, which should be converted from gr
 >
 > Answer:
 
-es, we implemented both tests in our API.
+Yes, we implemented both tests in our API.
 
 For unit testing, we used FastAPI’s TestClient to validate the behavior of the API. We implemented a health check test to ensure the service is running correctly (GET /health) and inference tests for the prediction endpoint (POST /predict). These tests verify that the API returns a valid response, that the expected fields (prediction, confidence, and probabilities) are present in the output and that confidence values are within a valid range. We also tested explicit model selection by passing a query parameter to ensure that different backbones (DenseNet121 and EfficientNet-B0) are correctly handled by the API.
 
@@ -627,8 +631,11 @@ Overall, despite the learning curve, working in the cloud was a valuable experie
 > *implemented using ...*
 >
 > Answer:
+We implemented a frontend for our API using Streamlit with the goal of providing a simple and user-friendly interface that allows all users to test the trained model without directly interacting with the API endpoints.
 
-RITA
+The Streamlit application allows users to upload a chest X-ray image and select which model to use (DenseNet121 or EfficientNet-B0) through a dropdown menu. Once the user clicks the inference button, the image is sent to the backend FastAPI service via an HTTP POST request. The frontend then displays the uploaded image, the predicted class, the confidence score and the probability distribution for all classes returned by the API.
+
+This frontend was used to validate the complete pipeline, from user interaction and data submission to model prediciton and output generation. The Streamlit application shows how our model can be integrated and consumed in a real application scenario, where everyone can interact with it.
 
 ### Question 29
 
@@ -688,3 +695,7 @@ Because a lot of time was spent solving these issues, we did not manage to fully
 Initially we were 3 members but one of the group members could not give any time for this project so it remained all the work just for two people:
 
 - s251921: create the repository and cookiecutter template, downloaded and processed the data, responsible for the building and configuring the dockerfiles, write the unit tests related with the data, model and training, continuous integrat
+
+- s251920: developed the model and the training and evaluation pipelines, added hydra, weights and biases and profiling to the code, responsible for creating the API and its' metrics, tests and frontend. 
+
+During this project we used ChatGPT to help debug our code and improve the formulation of some sentences.

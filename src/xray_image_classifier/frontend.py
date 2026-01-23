@@ -1,35 +1,9 @@
 import streamlit as st
 import requests
 from PIL import Image
-import io
-
-import os
-#from google.cloud import run_v2
 
 
-# def get_backend_url():
-#     """
-#     Discover backend Cloud Run service URL.
-
-#     Falls back to BACKEND_URL env var if not found.
-#     """
-#     try:
-#         parent = "projects/my-personal-mlops-project/locations/europe-west1"
-#         client = run_v2.ServicesClient()
-
-#         for service in client.list_services(parent=parent):
-#             name = service.name.split("/")[-1]
-#             if name == "production-model":
-#                 return service.uri + "/predict"
-
-    # except Exception as e:
-    #     print(f"[WARN] Cloud Run discovery failed: {e}")
-
-    # return os.getenv("BACKEND_URL", None)
-
-# -----------------------------
 # Configuration
-# -----------------------------
 API_URL = "http://127.0.0.1:8000/predict"
 
 st.set_page_config(
@@ -37,20 +11,18 @@ st.set_page_config(
     layout="centered",
 )
 
-st.title("🩻 Chest X-ray Classifier")
+st.title("Chest X-ray Classifier")
 st.write("Upload a chest X-ray image and run inference using the trained model.")
 
-# -----------------------------
+
 # Model selection
-# -----------------------------
 model_name = st.selectbox(
     "Select model",
     options=["densenet121", "efficientnet-b0"],
 )
 
-# -----------------------------
+
 # File uploader
-# -----------------------------
 uploaded_file = st.file_uploader(
     "Upload an X-ray image",
     type=["jpg", "jpeg", "png"],
@@ -61,9 +33,8 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded X-ray")
 
-    # -----------------------------
+
     # Predict button
-    # -----------------------------
     if st.button("Run inference"):
         with st.spinner("Sending image to backend..."):
             try:
