@@ -269,7 +269,7 @@ Our code coverage is 50% in the data, model, train and API files in the source f
 >
 > Answer:
 
-Yes, our workflow made use of branches during development. Each group member worked primarily on their own dedicated branch, which allowed parallel development without interfering with the main branach. One branch focused on model development, training, Hydra and Weights&Biases configuration, experiment tracking, and API/frontend implementation, while the other branch focused on testing, continuous integration, Dockerization, data version control, and cloud configuration.
+Yes, our workflow made use of branches during development. Each group member worked primarily on their own dedicated branch, which allowed parallel development without interfering with the main branch. One branch focused on model development, training, Hydra and Weights&Biases configuration, experiment tracking, and API/frontend implementation, while the other branch focused on testing, continuous integration, Dockerization, data version control, and cloud configuration.
 
 When a new code component was finished, changes were merged into the main branch. This workflow helped isolate experimental code from the final version of the project. It also made it easier to debug issues and resolve conflicts incrementally rather than all at once.
 
