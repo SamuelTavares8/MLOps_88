@@ -1,17 +1,20 @@
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm AS base
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS base
 
-COPY uv.lock uv.lock
-COPY pyproject.toml pyproject.toml
+WORKDIR /app
 
+COPY uv.lock pyproject.toml README.md ./
 RUN uv sync --frozen --no-install-project
 
 COPY src src/
-
+COPY models models
 RUN uv sync --frozen
 
-# Instead of uv sync during build, use the following to speed up
-# iterative development with caching (not installing everything again)
-#ENV UV_LINK_MODE=copy
-#RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-ENTRYPOINT ["uv", "run", "uvicorn", "src.xray_image_classifier.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Cloud Run requires this
+EXPOSE 8080
+
+# IMPORTANT: shell form so $PORT is expanded
+CMD uv run uvicorn src.xray_image_classifier.api:app \
+    --host 0.0.0.0 \
+    --port ${PORT:-8080} \
+    --workers 1
