@@ -313,8 +313,7 @@ We configured linting with ruff, following PEP8 conventions to enforce a clean a
 
 The CI is tested across multiple operating systems (ubuntu-latest and macos-latest) and Python versions (3.11 and 3.12) to guarantee platform compatibility. To speed up the workflows, we enabled caching for Python dependencies and pre-commit hooks, reducing build times significantly.
 
-In addition, we created a pre-commit auto-update workflow, which periodically updates all pre-commit hooks (such as ruff, black, and mypy). This workflow runs daily via a cron job and automatically opens a pull request with the updated versions.
-We also attempted to configure an additional workflow to trigger when data tracked with DVC changed. However, this required Google authentication via GitHub Actions, which caused issues with DVC remote authentication and was not working.
+In addition, we created a pre-commit auto-update workflow, which periodically updates all pre-commit hooks (such as ruff, and mypy). We also attempted to configure an additional workflow to trigger when data tracked with DVC changed. However, this required Google authentication via GitHub Actions, which caused issues with DVC remote authentication and was not working.
 
 An example of one of our workflows can be found here: https://github.com/SamuelTavares8/MLOps_88/tree/main/.github/workflows
 
@@ -337,7 +336,7 @@ An example of one of our workflows can be found here: https://github.com/SamuelT
 
 Initially, experiments were run using a standard training script (train.py) with fixed hyperparameters defined directly in the code. To run this, a task was defined in the task.py file, where the user can choose which model to use (DenseNet or EfficientNet) and whether profiling should be done or not. It can be run as:
 
-uv run invoke train densenet121 --profile
+*uv run invoke train densenet121 --profile*
 
 if we wish to run the DenseNet model with profiling.
 
@@ -346,7 +345,7 @@ different training parameters (learning rate, batch size, number of epochs). The
 
 Experiments are executed through the script train_hydra.py. We also defined a task to run this file, so we can run it as:
 
-uv run invoke train-hydra.py experiment=exp_1
+*uv run invoke train-hydra.py experiment=exp_1*
 
 Different experiment files correspond to different hyperparameter configurations. This setup allows us to easily switch between experiments, track configurations and systematically compare results without modifying the source code.
 
@@ -367,7 +366,7 @@ Different experiment files correspond to different hyperparameter configurations
 
 Reproducibility was ensured mainly through the use of configuration files and experiment tracking. All experiment parameters are defined in Hydra YAML configuration files, meaning that every experiment is fully described by a specific configuration. When an experiment is executed with train_hydra.py, Hydra automatically stores the exact configuration used and the outputs in the output folder, ensuring that no information about the experiment setup is lost.
 
-Additionally, dependency reproducibility is guaranteed through uv and the uv.lock file, which fixes exact package versions across all environments. This ensures that experiments can be rerun under identical software conditions. Data reproducibility is ensured using DVC, where datasets are versioned and linked to specific commits, making it possible to retrieve the exact data version used during training, even though that was not used in this project it constitutes a big advantage of using DVC.
+Additionally, dependency reproducibility is guaranteed through uv and the uv.lock file, which fixes exact package versions across all environments. This ensures that experiments can be rerun under identical conditions. Data reproducibility is ensured using DVC, where datasets are versioned and linked to specific commits, making it possible to retrieve the exact data version used during training. Even though that was not used in this project it constitutes a big advantage of using DVC.
 
 We also logged each run using Weights & Biases, which stores hyperparameters, training metrics, and artifacts corresponding to the trained model checkpoints. Thus, to reproduce an experiment, we only need the corresponding configuration file and the recorded commit hash, making the full pipeline reproducible.
 
@@ -438,7 +437,7 @@ A link to a dockerfile (training) is: https://github.com/SamuelTavares8/MLOps_88
 
 Debugging was mainly done by running the code locally and carefully inspecting error messages. When errors occurred, we used print statements and logging to check intermediate values, such as model outputs, loss values and configuration parameters.We also focused on specific parts of the code when the errors appeared to make sure we could undertsand the origin of the error. In some cases, we consulted documentation and LLM's to help us.
 
-We performed profiling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profiling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
+We also performed profiling of the code. It can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profiling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient.
 
 
 
