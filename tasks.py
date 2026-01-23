@@ -1,4 +1,5 @@
 import os
+import profile
 
 from invoke import Context, task
 
@@ -33,6 +34,12 @@ def train(ctx: Context, backbone: str = "densenet121", profile: bool = False) ->
 
     if profile:
         cmd += " --profile"
+    ctx.run(cmd, echo=True, pty=not WINDOWS)
+
+@task
+def train_hydra(ctx: Context, experiment: str = "exp1", profile: bool = False) -> None:
+    """Train model."""
+    cmd = f"uv run src/xray_image_classifier/train_hydra.py experiment={experiment}"
     ctx.run(cmd, echo=True, pty=not WINDOWS)
 
 

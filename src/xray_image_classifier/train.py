@@ -5,8 +5,6 @@ This script trains a multi-class classifier (COVID, Pneumonia,
 Normal, Tuberculosis) using a MONAI backbone and logs metrics
 using Weights & Biases.
 
-Run:
-    uv run python train.py train --epochs 10
 """
 
 from __future__ import annotations
@@ -14,8 +12,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 import matplotlib.pyplot as plt
-
-
 import torch
 from torch.profiler import profile, record_function, ProfilerActivity, tensorboard_trace_handler
 import typer
@@ -236,11 +232,9 @@ def train(
 
             optimizer.zero_grad()
 
-            # with record_function("forward"):
             logits = model(x)
             loss = loss_fn(logits, y)
 
-            # with record_function("backward"):
             loss.backward()
             optimizer.step()
             acc = (logits.argmax(dim=1) == y).float().mean().item()

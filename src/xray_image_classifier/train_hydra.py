@@ -1,10 +1,8 @@
 """
 Training script for Chest X-ray classification using MONAI + Hydra.
 
-- Dataset is FIXED (ImageFolder-style)
-- Hydra controls ONLY model & training hyperparameters
+- Hydra controls model & training hyperparameters
 - Supports DenseNet121 & EfficientNet-B0
-- Optional profiling
 - Logs to Weights & Biases
 """
 
@@ -19,12 +17,6 @@ import hydra
 from omegaconf import DictConfig
 import wandb
 
-from torch.profiler import (
-    profile,
-    record_function,
-    ProfilerActivity,
-    tensorboard_trace_handler,
-)
 
 from monai.data import DataLoader, Dataset
 from monai.transforms import (
@@ -106,6 +98,16 @@ def build_optimizer(cfg, model, phase: int):
         lr = cfg.optimizer.lr_phase2
         wd = cfg.optimizer.weight_decay
 
+    params = filter(lambda p: p.requires_grad, model.parameters())
+
+    optimizer = torch.optim.Adam(
+        params,
+        lr=lr,
+        weight_decay=wd,
+    )
+
+    return optimizer
+
 
 def set_seed(seed: int) -> None:
     import random
@@ -158,55 +160,6 @@ def train(cfg: DictConfig) -> None:
         },
     )
 
-    # -------------------------------------------------------------------------
-    # PROFILING ONLY (no training)
-    # -------------------------------------------------------------------------
-    if cfg.training.profile:
-        LOGGER.warning("Running profiling only")
-
-        model.freeze_backbone()
-
-        # optimizer = torch.optim.Adam(
-        #    filter(lambda p: p.requires_grad, model.parameters()),
-        #    lr=cfg.training.lr_phase1,
-        # )
-
-        optimizer = build_optimizer(cfg, model, phase=1)
-
-        model.train()
-
-        with profile(
-            activities=[ProfilerActivity.CPU],
-            schedule=torch.profiler.schedule(
-                wait=1,
-                warmup=1,
-                active=3,
-                repeat=1,
-            ),
-            on_trace_ready=tensorboard_trace_handler(TB_DIR / cfg.model.backbone),
-            record_shapes=False,
-            profile_memory=False,
-            with_stack=False,
-        ) as prof:
-            for batch in train_loader:
-                x = batch["image"].to(DEVICE)
-                y = batch["label"].to(DEVICE)
-
-                optimizer.zero_grad()
-
-                with record_function("forward"):
-                    logits = model(x)
-                    loss = loss_fn(logits, y)
-
-                with record_function("backward"):
-                    loss.backward()
-                    optimizer.step()
-
-                prof.step()
-                break
-
-        LOGGER.info("Profiling finished.")
-        return
 
     # -------------------------------------------------------------------------
     # Phase 1 — Train classifier
@@ -269,12 +222,6 @@ def train(cfg: DictConfig) -> None:
     # -------------------------------------------------------------------------
     LOGGER.info("Phase 2: Fine-tuning (%s)", cfg.model.backbone)
     model.unfreeze_for_finetuning()
-
-    # optimizer = torch.optim.Adam(
-    #    filter(lambda p: p.requires_grad, model.parameters()),
-    #    lr=cfg.training.lr_phase2,
-    # )
-
     optimizer = build_optimizer(cfg, model, phase=2)
 
     for epoch in range(cfg.training.epochs_phase2):
@@ -321,7 +268,7 @@ def train(cfg: DictConfig) -> None:
     # -------------------------------------------------------------------------
     # Save model
     # -------------------------------------------------------------------------
-    model_path = MODELS_DIR / f"xray_classifier_{cfg.model.backbone}_finetuned.pth"
+    model_path = MODELS_DIR / f"xray_classifier_{cfg.model.backbone}_finetuned_{cfg.training.batch_size}_{cfg.training.epochs_phase1}_{cfg.training.epochs_phase2}.pth"
     torch.save(model.state_dict(), model_path)
 
     wandb.log_artifact(

@@ -5,7 +5,7 @@ import torch
 from torchvision import transforms
 
 # =========================
-# IMPORT YOUR MODEL
+# IMPORT MODEL
 # =========================
 from xray_image_classifier import model
 from xray_image_classifier.model import XRayClassifier 
@@ -57,7 +57,7 @@ for m in MODELS.values():
 
 
 # =========================
-# TRANSFORMS (MUST MATCH TRAINING)
+# TRANSFORMS 
 # =========================
 transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
