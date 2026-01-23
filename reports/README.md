@@ -441,7 +441,11 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 17 fill here ---
+In our project, we used Cloud Storage (GCP Buckets) to store large datasets and artifacts tracked with DVC, allowing scalable and reliable data storage outside of GitHub. Cloud Build was used to automatically build Docker images from our repository whenever changes were pushed, enabling continuous integration. These images were stored in the Artifact Registry which served as a centralized and versioned repository for Docker images.
+
+For deployment, we used Cloud Run to host our FastAPI inference service, providing our model to an end user. Vertex AI was used to train one of our models through a docker image.
+
+Additionally, we used Cloud Build Triggers to automate builds based on repository events, and Secret Manager to securely store and manage sensitive information such as service account credentials avoiding secrets in the codebase.
 
 ### Question 18
 
@@ -456,7 +460,7 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 18 fill here ---
+As explained in the previous question we did not use the Compute Engine but the Vertex AI instead
 
 ### Question 19
 
@@ -465,7 +469,8 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 19 fill here ---
+![my_image](figures/cloud_storage_1.png)
+![my_image](figures/cloud_storage_2.png)
 
 ### Question 20
 
@@ -474,7 +479,8 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 20 fill here ---
+![my_image](figures/artifact_registry_1.png)
+![my_image](figures/artifact_registry_2.png)
 
 ### Question 21
 
@@ -483,7 +489,7 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 21 fill here ---
+![my_image](figures/cloud_build.png)
 
 ### Question 22
 
@@ -498,7 +504,11 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
---- question 22 fill here ---
+Yes, we managed to train our model in the cloud using Vertex AI. At first, it was challenging to get everything running but in the end, we managed to have a model running for 17 hours in the Google data center in Frankfurt.The training was done by packaging our training code inside a Docker container, which includes the project source code, dependencies managed with uv, and the training entry point. This container was built and pushed to the GCP Artifact Registry and then used to create a custom training job in Vertex AI.
+
+The training job was launched using a configuration file (vertex_train_cpu.yaml) that specified all the necessary arguments, ensuring consistency with the local pipeline. Parameters such as data paths, number of epochs, and batch size were defined in the config file.
+
+Overall, we chose Vertex AI because it provides a fully managed environment for scalable and reproducible machine learning training, without the need to manually configure virtual machines or manage infrastructure.
 
 ## Deployment
 
@@ -515,13 +525,13 @@ We performed profilling of the code by using PyTorch’s built-in profiler that 
 >
 > Answer:
 
+
 We implemented a model inference API using FastAPI. The API loads two PyTorch models (DenseNet121 and EfficientNet-B0) at startup, initializes them with the same architecture used during training, loads their fine-tuned weights and sets them to evaluation mode to avoid repeated loading overhead.
 
 The POST /predict endpoint accepts an image, preferably from the test set, and a query parameter to select the model. Images are decoded using PIL, converted to RGB, and preprocessed with the same resizing and normalization used during training. Inference is executed under torch.no_grad(), and the API returns the predicted class, confidence score, and full probability distribution.
 
 Moreover, the API also exposes Prometheus metrics, including request counts, inference latency and input size statistics, through a /metrics endpoint, and provides a /health endpoint for service monitoring. This design makes our API suitable for cloud deployment.
 
---- question 23 fill here ---
 
 ### Question 24
 
@@ -536,8 +546,12 @@ Moreover, the API also exposes Prometheus metrics, including request counts, inf
 > *`curl -X POST -F "file=@file.json"<weburl>`*
 >
 > Answer:
+[RITA LOCALLY]
 
---- question 24 fill here ---
+The API was deployed in the cloud using Google Cloud Run. The FastAPI application was containerized with Docker and pushed to Google Cloud, where it is served as a fully managed, scalable service. Once deployed, the API can be accessed through the automatically generated FastAPI documentation interface at
+https://gcp-test-app-1036878523310.europe-west3.run.app/docs.
+
+Users can upload a 224×224 chest X-ray image, which should be converted from grayscale to RGB. Then it will be processed by the deployed model to return a classification result (Normal, Covid, Turbercolosis, Pneunomia). The service can also be invoked via: *curl -X POST -F "file=@file.json" https://gcp-test-app-1036878523310.europe-west3.run.app/docs*
 
 ### Question 25
 
@@ -552,11 +566,13 @@ Moreover, the API also exposes Prometheus metrics, including request counts, inf
 >
 > Answer:
 
+
 Yes, we implemented both tests in our API.
 
 For unit testing, we used FastAPI’s TestClient to validate the behavior of the API. We implemented a health check test to ensure the service is running correctly (GET /health) and inference tests for the prediction endpoint (POST /predict). These tests verify that the API returns a valid response, that the expected fields (prediction, confidence, and probabilities) are present in the output and that confidence values are within a valid range. We also tested explicit model selection by passing a query parameter to ensure that different backbones (DenseNet121 and EfficientNet-B0) are correctly handled by the API.
 
 In addition to unit tests, we implemented load testing using Locust to evaluate the API under concurrent usage. The load test simulates multiple users sending X-ray images to the inference endpoint, with weighted tasks to reflect realistic usage patterns (more frequent requests to DenseNet121 than EfficientNet-B0). Images are loaded once per simulated user to avoid disk I/O overhead during testing. We tested the API for 10 simulataneous users and it did not crash or fail. 
+
 
 
 ### Question 26
@@ -572,7 +588,11 @@ In addition to unit tests, we implemented load testing using Locust to evaluate 
 >
 > Answer:
 
---- question 26 fill here ---
+We did not manage to implement explicit monitoring of the deployed model. While the API was successfully deployed using Google Cloud Run and validated through unit and load testing, no additional monitoring logic for model performance or data drift was added.
+
+If we monitored the model outputs and input data over time would make it easier to notice changes in the data distribution that could negatively impact model performance.
+
+Overall, monitoring would allow problems to be detected and addressed at an early stage, reducing the risk of larger failures later on. This would help keep the application stable over time and improve its robustness and maintainability in a real-world deployment.
 
 ## Overall discussion of project
 
@@ -591,7 +611,11 @@ In addition to unit tests, we implemented load testing using Locust to evaluate 
 >
 > Answer:
 
---- question 27 fill here ---
+In total, we used approximately 4.10$ in Google Cloud credits during the project. The most expensive service was Vertex AI, accounting for 3.53$, mainly due to running training-related tasks and managing model resources.
+
+As this was our first experience working with Google Cloud, the initial setup was challenging and required time to understand how the different services interact. However, after completing the project, the platform became much clearer and less of a black box. Working in the cloud also helped us better understand how training jobs, registries, and services are hosted in data centers across different regions. Most of our resources were deployed in the Frankfurt region (europe-west3), which is geographically close to us and convenient in terms of latency and configuration.
+
+Overall, despite the learning curve, working in the cloud was a valuable experience.
 
 ### Question 28
 
@@ -607,6 +631,8 @@ In addition to unit tests, we implemented load testing using Locust to evaluate 
 >
 > Answer:
 
+
+RITA
 
 
 ### Question 29
@@ -638,7 +664,15 @@ In addition to unit tests, we implemented load testing using Locust to evaluate 
 >
 > Answer:
 
---- question 30 fill here ---
+The main struggles of the project were mostly related to configuration and cloud services, rather than the machine learning model itself. One of the first difficulties was integrating Hydra into the training pipeline. At the beginning, small mistakes in the configuration files caused runtime errors, and it took some time to understand how Hydra handles overrides and experiment files correctly.
+
+Another challenging part was setting up DVC with Google Drive using a service account that could be accessed by all group members and also work inside GitHub Actions. Managing credentials and permissions was not straightforward, and several attempts were needed before the setup worked reliably in both local and CI environments.
+
+Working with Google Cloud Platform was also difficult, especially at the start. Our account initially did not have access to Compute Engine, which slowed down progress due to the thought of some configuration problem. Later, training models using Vertex AI introduced several issues, such as configuring the W&B API key using Secret Manager, handling hyperparameters, and ensuring that the training jobs could access the data stored in the GCP bucket. We also faced problems with the base Docker image used for training, especially related to importing PyTorch, and the training run took a long time (17h).
+
+Deploying the API using Cloud Run was another major challenge. We encountered multiple problems related to container ports, model paths inside the container, and runtime configuration. Debugging these issues required several rebuilds and redeployments of the Docker image.
+
+Because a lot of time was spent solving these issues, we did not manage to fully implement the monitoring part of the project. Despite these challenges, the project helped us better understand how complex real-world MLOps systems are and how different tools interact with each other.
 
 ### Question 31
 
@@ -655,5 +689,3 @@ In addition to unit tests, we implemented load testing using Locust to evaluate 
 > *All members contributed to code by...*
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
-
---- question 31 fill here ---
