@@ -291,7 +291,7 @@ We used DVC due to the fact that we had a big dataset (x ray images) to use to i
 
 Although we set up data version control, our dataset was never modified. In general, DVC is beneficial in managing data in a project when multiple team members are working on the same data set. With data version control, team members can collaborate on the dataset and make changes without interfering with each other's work. It also allows for easy tracking of changes and rollbacks if necessary. Additionally, data version control makes it easy to reproduce results and maintain a clear history of changes to the data set, which is essential for transparency and reproducibility in research projects. Overall, data version control ensures efficient collaboration and accountability in data management.
 
-### Question 11 
+### Question 11
 
 > **Discuss you continuous integration setup. What kind of continuous integration are you running (unittesting,**
 > **linting, etc.)? Do you test multiple operating systems, Python  version etc. Do you make use of caching? Feel free**
@@ -565,7 +565,7 @@ The API was first deployed and tested locally by running the FastAPI application
 
 uv run uvicorn xray_image_classifier.api:app --app-dir src
 
-The application starts by loading the fine-tuned DenseNet121 and EfficientNet-B0 models from disk, moves them to the available device and sets them to evaluation mode. Once running, the API is accessible at http://127.0.0.1:8000. By checking the /health endpoint we can verify if the API is running without any problems. 
+The application starts by loading the fine-tuned DenseNet121 and EfficientNet-B0 models from disk, moves them to the available device and sets them to evaluation mode. Once running, the API is accessible at http://127.0.0.1:8000. By checking the /health endpoint we can verify if the API is running without any problems.
 
 After this, the API was deployed in the cloud using Google Cloud Run. The FastAPI application was containerized with Docker and pushed to Google Cloud, where it is served as a fully managed, scalable service. Once deployed, the API can be accessed through the automatically generated FastAPI documentation interface at
 https://gcp-test-app-1036878523310.europe-west3.run.app/docs.
@@ -668,6 +668,19 @@ This frontend was used to validate the complete pipeline, from user interaction 
 > Answer:
 
 
+![my_image](figures/architecture.png)
+
+The figure illustrates the overall architecture of our MLOps pipeline, covering both local development and cloud deployment components. The workflow starts in the local development environment, where the project is structured using a cookiecutter template and version-controlled with Git. Dependencies are managed using uv together with pyproject.toml and uv.lock, ensuring reproducible environments across team members.
+
+Model development and training are implemented using PyTorch and the MONAI framework. Experiments are configured through Hydra configuration files, which allow systematic variation of hyperparameters without modifying source code. During training, experiment metadata, metrics, and trained model artifacts are logged to Weights & Biases, enabling experiment comparison and traceability.
+
+Data management is handled using DVC. Training and evaluation datasets are stored locally during development and synchronized with a remote Google Cloud Storage bucket, which serves as the DVC remote. This ensures that data versions are tracked independently of code and can be reliably reproduced both locally and in the cloud.
+
+When changes are pushed to the GitHub repository, Cloud Build is triggered to build Docker images for training and inference. These images are stored in the Google Artifact Registry. For cloud-based training, a custom container is executed using Vertex AI, which pulls the required data from the GCP bucket and stores resulting artifacts back to cloud storage.
+
+For deployment, the inference Docker image is deployed to Google Cloud Run as a FastAPI service. Finally, a Streamlit frontend interacts with the deployed FastAPI API, allowing users to upload chest X-ray images and receive predictions through a simple graphical interface.
+
+
 ### Question 30
 
 > **Discuss the overall struggles of the project. Where did you spend most time and what did you do to overcome these**
@@ -710,8 +723,6 @@ Initially, our group consisted of three members, but one of them was unable to c
 
 - s251921: Created the repository using the Cookiecutter template, downloaded and processed the data, built and configured the Dockerfiles, wrote unit tests for data, model, and training modules, implemented continuous integration, and set up and managed the entire workflow on Google Cloud. Also worked on the report.
 
-- s251920: Developed the model and the training and evaluation pipelines, added hydra, weights and biases and profiling to the code, responsible for creating the API and its' metrics, tests and frontend. Contributed to the report. 
+- s251920: Developed the model and the training and evaluation pipelines, added hydra, weights and biases and profiling to the code, responsible for creating the API and its' metrics, tests and frontend. Contributed to the report.
 
 During this project we used ChatGPT to help debug our code and improve the formulation of some sentences.
-
-
