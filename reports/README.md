@@ -234,6 +234,7 @@ These concepts are especially important in group projects, where multiple people
 > *application but also ... .*
 >
 > Answer:
+
 In total, we implemented 17 tests.
 These include data-related tests (4 tests) that verify dataset loading, preprocessing, and correct train/validation/test splits. We also implemented model tests to ensure correct model initialization, forward passes and and output shapes (7 tests).
 
