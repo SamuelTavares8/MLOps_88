@@ -190,11 +190,15 @@ In addition, we used pre-commit hooks to enforce code quality locally before cha
 >
 > Answer:
 
-We initialized the project using the cookiecutter template provided in the course, which gave us a clean and well-structured starting point. We followed the template closely, adapting it to fit the needs of our medical imaging classification task.
+We initialized the project using the cookiecutter template provided in the course, which gave us a clean and well-structured starting point. We overall followed the template, adapting it to fit the needs of our medical imaging classification task.
 
-The project root contains configuration and metadata files such as pyproject.toml, CI configuration, and Dockerfiles. The data folder is managed with DVC and stores both raw and processed datasets as .dvc files. These are further organized into raw and processed directories, each split into train, val, and test subsets, with subfolders corresponding to each classification target. This structure ensures clear data versioning and reproducibility. The src folder contains the main source code, including dataset handling, model implementation, training (with and without hydra), and evaluation logic for the X-ray classification models. (VISUALIZE?)
+The project root contains configuration and metadata files such as pyproject.toml, CI configuration, and Dockerfiles. The data folder is managed with DVC and stores both raw and processed datasets as .dvc files. These are further organized into raw and processed directories, each split into train, val, and test subsets, with subfolders corresponding to each classification target. This structure ensures clear data versioning and reproducibility. 
 
-The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). We also included a config folder to manage experiment and training configurations. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage.
+The src folder contains the main source code, including dataset handling, model implementation, training and evaluation. We added an additional training file to run hydra experiments. Thus, our project has an usual training file, where profiling can be done optionally, and a train_hydra file that is prepared to run the 
+
+The tests folder contains unit and integration tests that are automatically executed in CI (data, model, training tests). It also has API and load tests. 
+
+ We also included a config folder to manage experiment and training configurations and a output one to record the hydra experiments of different model hyperparameters. Compared to the original template, we removed the notebooks folder and the LICENSE file, as notebooks were not used and licensing was not finalized at this stage. We also removed the file visualize.py in the source, since we did not use it in our project. 
 
 ### Question 6
 
@@ -230,8 +234,11 @@ These concepts are especially important in group projects, where multiple people
 > *application but also ... .*
 >
 > Answer:
+In total, we implemented 17 tests.
+These include data-related tests (4 tests) that verify dataset loading, preprocessing, and correct train/validation/test splits. We also implemented model tests to ensure correct model initialization, forward passes and and output shapes (7 tests).
 
-4 tests for data; 7 for the model; 3 for the training [A DESENVOLVER]
+Additionally, we added tests related to the training step to validate that the training loop runs correctly and that loss values are properly computed and logged (3 tests). For deployment, we included API unit tests to verify that the FastAPI endpoints behave as expected, as well as a load test to evaluate the robustness of the deployed service under multiple requests using locustfile.
+
 
 ### Question 8
 
@@ -246,7 +253,7 @@ These concepts are especially important in group projects, where multiple people
 >
 > Answer:
 
-My code coverage is [VALOR]. Even having 100% of code coverage, it does not mean that our code is error free. We can test several times the same code lines targeting different possible errors, as unexpected inputs, logic or even good training in the case of machine learning models. The only thing we could say is that is more probable to have a error free code with 100% coverage than with a lower percentage.
+Our code coverage is 50% in the data, model, train and API files in the source folder, which is far from the desired 100%. However, having 100% of code coverage does not mean that our code is error free. We can test several times the same code lines targeting different possible errors, as unexpected inputs, logic or even good training in the case of machine learning models. The only thing we could say is that is more probable to have a error free code with 100% coverage than with a lower percentage.
 
 ### Question 9
 
@@ -261,7 +268,11 @@ My code coverage is [VALOR]. Even having 100% of code coverage, it does not mean
 >
 > Answer:
 
-We used two different branches. In one of them we develop the model, trained, used hydra, Weights&Biases. On the other branch we created the unit test, setup the version control [POR CONTINUAR]
+Yes, our workflow made use of branches during development. Each group member worked primarily on their own dedicated branch, which allowed parallel development without interfering with the main branach. One branch focused on model development, training, Hydra and Weights&Biases configuration, experiment tracking, and API/frontend implementation, while the other branch focused on testing, continuous integration, Dockerization, data version control, and cloud configuration.
+
+When a new code component was finished, changes were merged into the main branch. This workflow helped isolate experimental code from the final version of the project. It also made it easier to debug issues and resolve conflicts incrementally rather than all at once.
+
+Using branches improved collaboration by reducing the risk of overwriting each other’s work and by providing a clear structure for integrating new code. Thus, this approach increased code quality and development efficiency.
 
 ### Question 10
 
@@ -314,6 +325,22 @@ Although we set up data version control, our dataset was never modified. In gene
 >
 > Answer:
 
+Initially, experiments were run using a standard training script (train.py) with fixed hyperparameters defined directly in the code. To run this, a task was defined in the task.py file, where the user can choose which model to use (DenseNet or EfficientNet) and whether profilling should be done or not. It can be run as:
+
+uv run invoke train densenet121 --profile
+
+if we wish to run the DenseNet model with profilling.
+
+To improve flexibility and reproducibility, we later introduced Hydra for experiment configuration. All parameters are defined in structured YAML configuration files inside the configs/ folder. Inside this folder, we defined different models, optimizers (with different learning rates and weight decay) and 
+different training parameters (learning rate, batch size, number of epochs). The experiments result from different configurations of these parameters. 
+
+Experiments are executed through the script train_hydra.py. We also defined a task to run this file, so we can run it as:
+
+uv run invoke train-hydra.py experiment=exp_1
+
+Different experiment files correspond to different hyperparameter configurations. This setup allows us to easily switch between experiments, track configurations and systematically compare results without modifying the source code.
+
+
 --- question 12 fill here ---
 
 ### Question 13
@@ -329,7 +356,13 @@ Although we set up data version control, our dataset was never modified. In gene
 >
 > Answer:
 
---- question 13 fill here ---
+Reproducibility was ensured mainly through the use of configuration files and experiment tracking. All experiment parameters are defined in Hydra YAML configuration files, meaning that every experiment is fully described by a specific configuration. When an experiment is executed with train_hydra.py, Hydra automatically stores the exact configuration used and the outputs in the output folder, ensuring that no information about the experiment setup is lost.
+
+Additionally, dependency reproducibility is guaranteed through uv and the uv.lock file, which fixes exact package versions across all environments. This ensures that experiments can be rerun under identical software conditions. Data reproducibility is ensured using DVC, where datasets are versioned and linked to specific commits, making it possible to retrieve the exact data version used during training.
+
+We also logged each run using Weights & Biases, which stores hyperparameters, training metrics, and artifacts corresponding to the trained model checkpoints. Thus, to reproduce an experiment, we only need the corresponding configuration file, the DVC data version, and the recorded commit hash, making the full pipeline reproducible.
+
+
 
 ### Question 14
 
@@ -345,10 +378,20 @@ Although we set up data version control, our dataset was never modified. In gene
 > *As seen in the second image we are also tracking ... and ...*
 >
 > Answer:
+![alt text](image-1.png)
+![alt text](image-2.png)
+The uploaded screenshots show the experiments logged using Weights & Biases (W&B) during the training of our model. These 2 images show the results for the final model being deployed in the cloud. 
+In the first image, we show the configuration of the model, including key hyperparameters such as the selected backbone (DenseNet121), batch size, number of classes, device, and the number of epochs for each training phase. Logging this information ensures that each experiment is fully traceable and that the exact training setup can be recovered later.
+
+The second image presents the training metrics tracked during the epochs. We logged the training loss and training accuracy at each epoch. The loss curve shows a consistent decrease throughout training, indicating stable convergence of the model. At the same time, the training accuracy steadily increases and reaches values close to 1.0, showing that the model successfully learns the training data. These metrics are essential to assess whether the learning process behaves as expected.
+
+These  metrics allow us to compare different experiments, understand the impact of hyperparameter choices and select the best performing model for deployment.
+
+
 
 --- question 14 fill here ---
 
-### Question 15
+### Question 15 -- SAMU 
 
 > **Docker is an important tool for creating containerized applications. Explain how you used docker in your**
 > **experiments/project? Include how you would run your docker images and include a link to one of your docker files.**
@@ -363,7 +406,7 @@ Although we set up data version control, our dataset was never modified. In gene
 
 --- question 15 fill here ---
 
-### Question 16
+### Question 16 
 
 > **When running into bugs while trying to run your experiments, how did you perform debugging? Additionally, did you**
 > **try to profile your code or do you think it is already perfect?**
@@ -375,6 +418,11 @@ Although we set up data version control, our dataset was never modified. In gene
 > *run of our main code at some point that showed ...*
 >
 > Answer:
+
+Debugging was mainly done by running the code locally and carefully inspecting error messages. When errors occurred, we used print statements and logging to check intermediate values, such as model outputs, loss values and configuration parameters.We also focused on specific parts of the code when the errors appeared to make sure we could undertsand the origin of the error. In some cases, we consulted documentation and LLM's to help us. 
+
+We performed profilling of the code by using PyTorch’s built-in profiler that can be activated with the train.py file using the --profile flag. When activated, the training script runs a short profiling session before the full training. During this session, the model backbone is frozen and only 5 batches are processed, since profilling is a heavy task. The profiler records CPU execution time and other statistics and stores them in a json file in the reports/tensorboard folder. We then used Perfetto UI to visualize the results. The results showed that most computation time was spent in the model forward pass, with no significant stalls caused by data loading or Python overhead. Thus, we concluded that, even though our training pipeline was not perfect, it was fairly efficient. 
+
 
 --- question 16 fill here ---
 
@@ -466,6 +514,12 @@ Although we set up data version control, our dataset was never modified. In gene
 > *to the API to make it more ...*
 >
 > Answer:
+
+We implemented a model inference API using FastAPI. The API loads two PyTorch models (DenseNet121 and EfficientNet-B0) at startup, initializes them with the same architecture used during training, loads their fine-tuned weights and sets them to evaluation mode to avoid repeated loading overhead.
+
+The POST /predict endpoint accepts an image, preferably from the test set, and a query parameter to select the model. Images are decoded using PIL, converted to RGB, and preprocessed with the same resizing and normalization used during training. Inference is executed under torch.no_grad(), and the API returns the predicted class, confidence score, and full probability distribution.
+
+Moreover, the API also exposes Prometheus metrics, including request counts, inference latency and input size statistics, through a /metrics endpoint, and provides a /health endpoint for service monitoring. This design makes our API suitable for cloud deployment.
 
 --- question 23 fill here ---
 

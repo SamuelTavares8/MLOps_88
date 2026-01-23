@@ -114,22 +114,16 @@ async def predict(
             detail=f"Unknown model '{model_name}'",
         )
 
-    # -----------------------------
-    # Metrics: request count
-    # -----------------------------
+    # Request count
     REQUEST_COUNT.inc()
 
-    # -----------------------------
-    # Read file ONCE
-    # -----------------------------
+    # Read file
     image_bytes = await file.read()
 
     # Metrics: input size
     INPUT_SIZE_BYTES.observe(len(image_bytes))
 
-    # -----------------------------
     # Decode image
-    # -----------------------------
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception:
@@ -138,16 +132,12 @@ async def predict(
             detail="Invalid image file",
         )
 
-    # -----------------------------
     # Preprocess
-    # -----------------------------
     x = transform(image).unsqueeze(0).to(DEVICE)
 
     selected_model = MODELS[model_name]
 
-    # -----------------------------
     # Inference + latency metric
-    # -----------------------------
     start_time = time.time()
 
     with torch.no_grad():
@@ -156,9 +146,7 @@ async def predict(
 
     INFERENCE_LATENCY.observe(time.time() - start_time)
 
-    # -----------------------------
     # Post-processing
-    # -----------------------------
     conf, idx = torch.max(probs, dim=1)
 
     return {
