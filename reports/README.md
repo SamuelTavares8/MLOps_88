@@ -566,7 +566,11 @@ Users can upload a 224×224 chest X-ray image, which should be converted from gr
 >
 > Answer:
 
-[RITA PARTE]
+es, we implemented both tests in our API.
+
+For unit testing, we used FastAPI’s TestClient to validate the behavior of the API. We implemented a health check test to ensure the service is running correctly (GET /health) and inference tests for the prediction endpoint (POST /predict). These tests verify that the API returns a valid response, that the expected fields (prediction, confidence, and probabilities) are present in the output and that confidence values are within a valid range. We also tested explicit model selection by passing a query parameter to ensure that different backbones (DenseNet121 and EfficientNet-B0) are correctly handled by the API.
+
+In addition to unit tests, we implemented load testing using Locust to evaluate the API under concurrent usage. The load test simulates multiple users sending X-ray images to the inference endpoint, with weighted tasks to reflect realistic usage patterns (more frequent requests to DenseNet121 than EfficientNet-B0). Images are loaded once per simulated user to avoid disk I/O overhead during testing. We tested the API for 10 simulataneous users and it did not crash or fail.
 
 ### Question 26
 
